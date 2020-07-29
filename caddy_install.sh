@@ -90,6 +90,7 @@ echo "  root /var/www/default" >> /etc/caddy/Caddyfile
 echo "  log /var/log/caddy/access.log {" >> /etc/caddy/Caddyfile
 echo "  rotate_size 50" >> /etc/caddy/Caddyfile
 echo "  rotate_keep 10" >> /etc/caddy/Caddyfile
+echo "  except /video" >> /etc/caddy/Caddyfile
 echo "  }" >> /etc/caddy/Caddyfile
 echo "  proxy /video 127.0.0.1:10000 {" >> /etc/caddy/Caddyfile
 echo "    websocket" >> /etc/caddy/Caddyfile

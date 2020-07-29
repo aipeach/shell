@@ -111,7 +111,7 @@ systemctl restart caddy
 
 echo "${CYELLOW}Caddy已安装完成${CEND}"
 echo "${CYELLOW}配置文件: /etc/caddy/Caddyfile${CEND}"
-echo "${CYELLOW}查看日志: cat /var/log/caddy/access.log${CEND}"
+echo "${CYELLOW}查看日志: tail /var/log/caddy/access.log${CEND}"
 echo "${CYELLOW}Caddy 使用命令:${CEND}"
 echo "${CYELLOW}启动Caddy: systemctl start caddy${CEND}"
 echo "${CYELLOW}停止Caddy: systemctl stop caddy${CEND}"

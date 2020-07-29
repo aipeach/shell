@@ -66,7 +66,7 @@ if [[ ${release} == "centos" ]]; then
     yum install nodejs -y
 else
     apt install nano redis-server git wget unzip -y
-    curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+    curl -sL https://deb.nodesource.com/setup_12.x | bash -
     apt-get install nodejs -y
 fi
 

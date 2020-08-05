@@ -61,11 +61,11 @@ if [[ ${release} == "centos" ]]; then
     yum install -y http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
     yum --enablerepo=remi install redis -y
     systemctl start redis
-    yum install nano git wget curl unzip -y
+    yum install nano git wget curl unzip xz -y
     curl --silent --location https://rpm.nodesource.com/setup_12.x | bash -
     yum install nodejs -y
 else
-    apt install nano redis-server git wget unzip -y
+    apt install nano redis-server git wget unzip xz-utils -y
     curl -sL https://deb.nodesource.com/setup_12.x | bash -
     apt-get install nodejs -y
 fi

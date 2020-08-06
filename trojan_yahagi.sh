@@ -65,7 +65,7 @@ if [[ ${release} == "centos" ]]; then
     curl --silent --location https://rpm.nodesource.com/setup_12.x | bash -
     yum install nodejs -y
 else
-    apt install nano redis-server git wget unzip xz-utils -y
+    apt install nano redis-server git wget curl unzip xz-utils -y
     curl -sL https://deb.nodesource.com/setup_12.x | bash -
     apt-get install nodejs -y
 fi

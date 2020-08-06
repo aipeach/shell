@@ -75,6 +75,7 @@ systemctl enable nodejs
 
 rm -rf /opt/trojan-server
 rm -f /etc/systemd/system/trojan.service
+rm -f /etc/systemd/system/yahagi.service
 mkdir /opt/trojan-server
 mkdir /opt/trojan-server/ssl
 
@@ -96,7 +97,6 @@ echo "[Service]" >> /etc/systemd/system/trojan.service
 echo "Type=simple" >> /etc/systemd/system/trojan.service
 echo "PIDFile=/usr/src/trojan/trojan/trojan.pid" >> /etc/systemd/system/trojan.service
 echo "ExecStart=/opt/trojan-server/trojan/trojan -c /opt/trojan-server/trojan/config.json" >> /etc/systemd/system/trojan.service
-echo "ExecReload=/bin/kill -HUP \$MAINPID" >> /etc/systemd/system/trojan.service
 echo "Restart=on-failure" >> /etc/systemd/system/trojan.service
 echo "RestartSec=1s" >> /etc/systemd/system/trojan.service
 echo "" >> /etc/systemd/system/trojan.service
@@ -110,7 +110,6 @@ echo "" >> /etc/systemd/system/yahagi.service
 echo "[Service]" >> /etc/systemd/system/yahagi.service
 echo "Type=simple" >> /etc/systemd/system/yahagi.service
 echo "ExecStart=node /opt/trojan-server/yahagi.js/index.js" >> /etc/systemd/system/yahagi.service
-echo "ExecReload=/bin/kill -HUP \$MAINPID" >> /etc/systemd/system/yahagi.service
 echo "Restart=on-failure" >> /etc/systemd/system/yahagi.service
 echo "RestartSec=1s" >> /etc/systemd/system/yahagi.service
 echo "" >> /etc/systemd/system/yahagi.service

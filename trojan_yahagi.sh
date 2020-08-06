@@ -76,6 +76,7 @@ systemctl enable nodejs
 rm -rf /opt/trojan-server
 rm -f /etc/systemd/system/trojan.service
 mkdir /opt/trojan-server
+mkdir /opt/trojan-server/ssl
 
 echo -e "${CYELLOW}[信息] 正在安装Trojan-cluster中！${CEND}"
 # Trojan-cluster
@@ -102,13 +103,35 @@ echo "" >> /etc/systemd/system/trojan.service
 echo "[Install]" >> /etc/systemd/system/trojan.service
 echo "WantedBy=multi-user.target" >> /etc/systemd/system/trojan.service
 
+echo "[Unit]" > /etc/systemd/system/yahagi.service
+echo "Description=Yahagi" >> /etc/systemd/system/yahagi.service
+echo "After=network.target" >> /etc/systemd/system/yahagi.service
+echo "" >> /etc/systemd/system/yahagi.service
+echo "[Service]" >> /etc/systemd/system/yahagi.service
+echo "Type=simple" >> /etc/systemd/system/yahagi.service
+echo "ExecStart=node /opt/trojan-server/yahagi.js/index.js" >> /etc/systemd/system/yahagi.service
+echo "ExecReload=/bin/kill -HUP \$MAINPID" >> /etc/systemd/system/yahagi.service
+echo "Restart=on-failure" >> /etc/systemd/system/yahagi.service
+echo "RestartSec=1s" >> /etc/systemd/system/yahagi.service
+echo "" >> /etc/systemd/system/yahagi.service
+echo "[Install]" >> /etc/systemd/system/yahagi.service
+echo "WantedBy=multi-user.target" >> /etc/systemd/system/yahagi.service
+
 echo -e "${CYELLOW}[信息] 正在安装yahagi.js中！${CEND}"
 git clone https://github.com/trojan-cluster/yahagi.js.git /opt/trojan-server/yahagi.js
 cd /opt/trojan-server
 npm install yahagi.js
 
+sed -i "s|/path/to/certificate.crt|/opt/trojan-server/ssl/certificate.crt|"        /opt/trojan-server/trojan/config.json
+sed -i "s|/path/to/private.key|/opt/trojan-server/ssl/private.key|"                /opt/trojan-server/trojan/config.json
+
 chmod -R 755 /opt/trojan-server
 systemctl daemon-reload
 
 echo -e "${CYELLOW}[信息] 安装完毕！${CEND}"
+echo -e "${CYELLOW}[信息] 填写对接信息：/opt/trojan-server/yahagi.js/index.js${CEND}"
+echo -e "${CYELLOW}[信息] 导入证书到：/opt/trojan-server/ssl/certificate.crt${CEND}"
+echo -e "${CYELLOW}[信息] 导入私钥到：/opt/trojan-server/ssl/private.key${CEND}"
+echo -e "${CYELLOW}[信息] 启动Trojan：service trojan start${CEND}"
+echo -e "${CYELLOW}[信息] 启动yahagi：service yahagi start${CEND}"
 exit 0

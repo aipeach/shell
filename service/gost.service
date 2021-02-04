@@ -1,0 +1,27 @@
+[Unit]
+Description=gost
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+LimitCPU=infinity
+LimitFSIZE=infinity
+LimitDATA=infinity
+LimitSTACK=infinity
+LimitCORE=infinity
+LimitRSS=infinity
+LimitNOFILE=infinity
+LimitAS=infinity
+LimitNPROC=infinity
+LimitMEMLOCK=infinity
+LimitLOCKS=infinity
+LimitSIGPENDING=infinity
+LimitMSGQUEUE=infinity
+LimitRTPRIO=infinity
+LimitRTTIME=infinity
+Type=simple
+DynamicUser=true
+ExecStart=/usr/bin/gost -C /etc/gost/config.json
+
+[Install]
+WantedBy=multi-user.target

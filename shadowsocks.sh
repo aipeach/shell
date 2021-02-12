@@ -71,7 +71,7 @@ mkdir /opt/shadowsocks
 echo -e "${CYELLOW}[信息] 正在安装后端中！${CEND}"
 git clone https://github.com/Anankke/shadowsocks /opt/shadowsocks/default
 cd /opt/shadowsocks/default
-cp /opt/shadowsocks/default/apiconfig.json /opt/shadowsocks/default/user-apiconfig.json
+cp /opt/shadowsocks/default/apiconfig.py /opt/shadowsocks/default/user-apiconfig.py
 cp /opt/shadowsocks/default/config.json /opt/shadowsocks/default/user-config.json
 
 echo -e "${CYELLOW}[信息] 正在安装依赖中！${CEND}"

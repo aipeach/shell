@@ -57,7 +57,6 @@ echo -e "${CYELLOW}[信息] 正在安装依赖中！${CEND}"
 if [[ ${release} == "centos" ]]; then
     yum install python3 python3-pip git -y
     yum install net-tools libsodium libffi libffi-devel openssl-devel -y
-    pip3 install --upgrade pip setuptools
     systemctl stop firewalld
     systemctl disable firewalld
 else
@@ -76,6 +75,7 @@ cp /opt/shadowsocks/default/apiconfig.json /opt/shadowsocks/default/user-apiconf
 cp /opt/shadowsocks/default/config.json /opt/shadowsocks/default/user-config.json
 
 echo -e "${CYELLOW}[信息] 正在安装依赖中！${CEND}"
+pip3 install --upgrade pip setuptools
 pip3 install -r /opt/shadowsocks/default/requirements.txt
 
 echo -e "${CYELLOW}[信息] 正在写入服务配置中！${CEND}"

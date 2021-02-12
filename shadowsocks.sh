@@ -57,6 +57,7 @@ echo -e "${CYELLOW}[信息] 正在安装依赖中！${CEND}"
 if [[ ${release} == "centos" ]]; then
     yum install python3 python3-pip git -y
     yum install net-tools libsodium libffi libffi-devel openssl-devel -y
+    pip3 install --upgrade pip setuptools
     systemctl stop firewalld
     systemctl disable firewalld
 else

@@ -21,6 +21,7 @@ LimitRTPRIO=infinity
 LimitRTTIME=infinity
 Type=simple
 DynamicUser=true
+Restart=always
 ExecStart=/usr/bin/gost -C /etc/gost/config.json
 
 [Install]

@@ -71,8 +71,11 @@ mkdir /opt/shadowsocks
 echo -e "${CYELLOW}[信息] 正在安装后端中！${CEND}"
 git clone https://github.com/Anankke/shadowsocks /opt/shadowsocks/default
 cd /opt/shadowsocks/default
-cp /opt/shadowsocks/default/apiconfig.py /opt/shadowsocks/default/user-apiconfig.py
+cp /opt/shadowsocks/default/apiconfig.py /opt/shadowsocks/default/userapiconfig.py
 cp /opt/shadowsocks/default/config.json /opt/shadowsocks/default/user-config.json
+sed -i "s|SPEEDTEST = 6|SPEEDTEST = 0|" /opt/shadowsocks/default/userapiconfig.py
+echo -e "1.1.1.1\n8.8.8.8" >> /opt/shadowsocks/default/dns.conf
+
 
 echo -e "${CYELLOW}[信息] 正在安装依赖中！${CEND}"
 pip3 install --upgrade pip setuptools

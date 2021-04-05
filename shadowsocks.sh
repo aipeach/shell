@@ -83,7 +83,7 @@ pip3 install -r /opt/shadowsocks/default/requirements.txt
 
 echo -e "${CYELLOW}[信息] 正在写入服务配置中！${CEND}"
 echo "[Unit]" > /etc/systemd/system/shadowsocks@.service
-echo "Description=Getluffy ShadowsocksR Server" >> /etc/systemd/system/shadowsocks@.service
+echo "Description=ShadowsocksR Server" >> /etc/systemd/system/shadowsocks@.service
 echo "After=network.target" >> /etc/systemd/system/shadowsocks@.service
 echo "" >> /etc/systemd/system/shadowsocks@.service
 echo "[Service]" >> /etc/systemd/system/shadowsocks@.service

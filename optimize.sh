@@ -50,7 +50,7 @@ else
     exit 1
 fi
 
-OUT_ALERT "[信息] 正在更新系统中！"
+OUT_ALERT "[信息] 更新系统中！"
 if [[ ${release} == "centos" ]]; then
     yum makecache
     yum install epel-release -y
@@ -62,66 +62,67 @@ else
     apt autoremove --purge -y
 fi
 
-OUT_ALERT "[信息] 正在安装 haveged 增强性能中！"
+OUT_ALERT "[信息] 优化性能中！"
 if [[ ${release} == "centos" ]]; then
     yum install haveged -y
 else
     apt install haveged -y
+    apt install irqbalance -y
 fi
 
-OUT_ALERT "[信息] 正在配置 haveged 增强性能中！"
-systemctl disable --now haveged
-systemctl enable --now haveged
-
-OUT_ALERT "[信息] 正在优化系统参数中！"
+OUT_ALERT "[信息] 优化参数中！"
 chattr -i /etc/sysctl.conf
 cat > /etc/sysctl.conf << EOF
-vm.swappiness = 0
 fs.file-max = 1024000
-net.core.rmem_max = 4194304
-net.core.wmem_max = 4194304
-net.core.netdev_max_backlog = 250000
-net.core.somaxconn = 1024000
 net.core.default_qdisc = fq
-net.ipv4.conf.all.rp_filter = 0
-net.ipv4.conf.default.rp_filter = 0
-net.ipv4.conf.lo.arp_announce = 2
-net.ipv4.conf.all.arp_announce = 2
-net.ipv4.conf.default.arp_announce = 2
+net.core.netdev_max_backlog = 102400
+net.core.rmem_default = 65536
+net.core.rmem_max = 4194304
+net.core.somaxconn = 102400
+net.core.wmem_default = 65536
+net.core.wmem_max = 4194304
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+net.ipv4.ip_default_ttl = 128
 net.ipv4.ip_forward = 1
 net.ipv4.ip_local_port_range = 1024 65535
+net.ipv4.neigh.default.gc_interval = 30
 net.ipv4.neigh.default.gc_stale_time = 30
+net.ipv4.tcp_congestion_control = bbr
+net.ipv4.tcp_dsack = 1
 net.ipv4.tcp_ecn = 1
-net.ipv4.tcp_syncookies = 1
-net.ipv4.tcp_tw_reuse = 1
-net.ipv4.tcp_low_latency = 1
-net.ipv4.tcp_fin_timeout = 10
-net.ipv4.tcp_window_scaling = 1
-net.ipv4.tcp_keepalive_time = 10
-net.ipv4.tcp_timestamps = 1
-net.ipv4.tcp_sack = 1
 net.ipv4.tcp_fack = 1
+net.ipv4.tcp_fastopen = 3
+net.ipv4.tcp_fin_timeout = 3
+net.ipv4.tcp_keepalive_intvl = 10
+net.ipv4.tcp_keepalive_probes = 3
+net.ipv4.tcp_keepalive_time = 10
+net.ipv4.tcp_max_syn_backlog = 16384
+net.ipv4.tcp_max_tw_buckets = 16384
+net.ipv4.tcp_mtu_probing = 1
+net.ipv4.tcp_rfc1337 = 1
+net.ipv4.tcp_rmem = 4096 65536 4194304
+net.ipv4.tcp_sack = 1
 net.ipv4.tcp_syn_retries = 3
 net.ipv4.tcp_synack_retries = 3
-net.ipv4.tcp_max_syn_backlog = 16384
-net.ipv4.tcp_max_tw_buckets = 8192
-net.ipv4.tcp_fastopen = 3
-net.ipv4.tcp_mtu_probing = 1
-net.ipv4.tcp_rmem = 4096 65536 4194304
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_window_scaling = 1
 net.ipv4.tcp_wmem = 4096 65536 4194304
-net.ipv4.tcp_congestion_control = bbr
 net.ipv6.conf.all.forwarding = 1
 net.ipv6.conf.default.forwarding = 1
+vm.swappiness = 0
 EOF
 cat > /etc/security/limits.conf << EOF
-* soft nofile 512000
-* hard nofile 512000
-* soft nproc 512000
-* hard nproc 512000
-root soft nofile 512000
-root hard nofile 512000
-root soft nproc 512000
-root hard nproc 512000
+* soft nofile 102400
+* hard nofile 102400
+* soft nproc 102400
+* hard nproc 102400
+root soft nofile 102400
+root hard nofile 102400
+root soft nproc 102400
+root hard nproc 102400
 EOF
 cat > /etc/systemd/journald.conf <<EOF
 [Journal]

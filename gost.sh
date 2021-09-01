@@ -87,7 +87,7 @@ Install_ct(){
             `mv gost-linux-"$bit"-"$ct_new_ver" gost`
             `mv gost /usr/bin/gost`
             `chmod -R 777 /usr/bin/gost`
-            `wget --no-check-certificate https://raw.fastgit.org/aipeach/shell/master/service/gost.service && chmod -R 777 gost.service && mv gost.service /usr/lib/systemd/system`
+            `wget --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/aipeach/shell/master/service/gost.service && chmod -R 777 gost.service && mv gost.service /usr/lib/systemd/system`
             `mkdir /etc/gost && touch config.json && mv config.json /etc/gost && chmod -R 777 /etc/gost`
             `systemctl enable gost && systemctl restart gost`
             echo "------------------------------"

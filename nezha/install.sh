@@ -255,10 +255,6 @@ modify_agent_config() {
     systemctl daemon-reload
     systemctl enable nezha-agent
     systemctl restart nezha-agent
-
-    if [[ $# == 0 ]]; then
-        before_show_menu
-    fi
 }
 
 modify_dashboard_config() {

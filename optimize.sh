@@ -91,6 +91,12 @@ net.ipv4.tcp_thin_linear_timeouts = 1
 net.ipv4.tcp_fastopen = 3
 net.core.default_qdisc = fq
 net.ipv4.tcp_congestion_control = bbr
+net.core.somaxconn = 2048
+net.ipv4.tcp_max_syn_backlog = 2048
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_syncookies = 1
+net.ipv4.ip_local_port_range = 1024 65535
+net.ipv4.tcp_max_syn_backlog = 16384
 EOF
 cat > /etc/security/limits.conf << EOF
 * soft nofile 512000

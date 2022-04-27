@@ -106,6 +106,12 @@ root hard nofile 512000
 root soft nproc 512000
 root hard nproc 512000
 EOF
+cat > /etc/systemd/journald.conf <<EOF
+[Journal]
+SystemMaxUse=384M
+SystemMaxFileSize=128M
+ForwardToSyslog=no
+EOF
 sysctl -p
 
 cat > /etc/systemd/system/nettune.service << EOF

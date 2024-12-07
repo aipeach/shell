@@ -16,7 +16,17 @@ echo "⬇️ Downloading domain list using SOCKS5 proxy..."
 curl -s --socks5-hostname "$SOCKS5_PROXY" -o "$DOMAIN_FILE" "$DOMAIN_FILE_URL"
 
 # 检查文件是否成功下载
-if [ ! -f "$DOMAIN_FILE" ] || [ ! -s "$DOMAIN_FILE" ]; then
+if [ -f "$DOMAIN_FILE" ] && [ -s "$DOMAIN_FILE" ]; then
+    echo "✅ Domain list downloaded and saved successfully!"
+
+    # 发送 Telegram 消息
+    telegram_message="域名列表下载并保存成功。"
+    telegram_api="https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
+    curl -s --socks5 "$SOCKS5_PROXY" -X POST "$telegram_api" \
+        -d chat_id="$TELEGRAM_CHAT_ID" \
+        --data-urlencode "text=$telegram_message" \
+        -d parse_mode="Markdown" &>/dev/null
+else
     echo "❌ Failed to download domain file!"
     exit 1
 fi

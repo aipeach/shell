@@ -18,11 +18,11 @@ curl -s --socks5-hostname "$SOCKS5_PROXY" -o "$DOMAIN_FILE" "$DOMAIN_FILE_URL"
 # 检查文件是否成功下载
 if [ -f "$DOMAIN_FILE" ] && [ -s "$DOMAIN_FILE" ]; then
     echo "✅ Domain list downloaded and saved successfully!"
-
+    
     # 发送 Telegram 消息
     telegram_message="域名列表下载并保存成功。"
     telegram_api="https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
-    curl -s --socks5 "$SOCKS5_PROXY" -X POST "$telegram_api" \
+    curl -s --socks5-hostname "$SOCKS5_PROXY" -X POST "$telegram_api" \
         -d chat_id="$TELEGRAM_CHAT_ID" \
         --data-urlencode "text=$telegram_message" \
         -d parse_mode="Markdown" &>/dev/null
@@ -40,9 +40,9 @@ function query_cloudflare() {
         jq -r '.Answer[]?.data' 2>/dev/null | sort
 }
 
-# dig 查询函数（无代理）
+# dig 查询函数（无代理），过滤非 IP 地址
 function query_dig() {
-    dig +short "$1" @$CHINA_DNS_SERVER | sort
+    dig +short "$1" @$CHINA_DNS_SERVER 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
 }
 
 # 初始化结果统计

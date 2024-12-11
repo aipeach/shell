@@ -34,10 +34,10 @@ fi
 # 清空输出文件
 > "$OUTPUT_FILE"
 
-# Cloudflare DoH API 查询函数
+# Cloudflare DoH API 查询函数（过滤非 IP 地址）
 function query_cloudflare() {
     curl -s --socks5-hostname "$SOCKS5_PROXY" "https://cloudflare-dns.com/dns-query?name=$1&type=A" -H "accept: application/dns-json" |
-        jq -r '.Answer[]?.data' 2>/dev/null | sort
+        jq -r '.Answer[]?.data' 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
 }
 
 # dig 查询函数（无代理），过滤非 IP 地址

@@ -5,11 +5,12 @@ DOMAIN_FILE_URL="https://example.com/domains.txt" # 替换为域名列表文件�
 DOMAIN_FILE="domains.txt"
 OUTPUT_FILE="dns_check_results.txt"
 
-TELEGRAM_BOT_TOKEN="your_bot_token" # 替换为你的Telegram Bot Token
-TELEGRAM_CHAT_ID="your_chat_id"     # 替换为你的Telegram Chat ID
-SOCKS5_PROXY="127.0.0.1:1080"       # 替换为你的 SOCKS5 代理地址
-CHINA_DNS_SERVER="119.29.29.29"     # 替换为中国 DNS 服务器
-AMESSAGE="ABCDEFG"                  # 自定义消息
+TELEGRAM_BOT_TOKEN="your_bot_token"   # 替换为你的Telegram Bot Token
+TELEGRAM_CHAT_ID="your_chat_id"       # 替换为你的Telegram Chat ID
+SOCKS5_PROXY="127.0.0.1:1080"         # 替换为你的 SOCKS5 代理地址
+CHINA_DNS_SERVER1="119.29.29.29"      # 替换为中国 DNS 服务器
+CHINA_DNS_SERVER2="114.114.114.114"   # 替换为中国 DNS 服务器
+AMESSAGE="ABCDEFG"                    # 自定义消息
 
 # 下载域名列表
 echo "⬇️ Downloading domain list using SOCKS5 proxy..."
@@ -42,7 +43,7 @@ function query_cloudflare() {
 
 # dig 查询函数（无代理），过滤非 IP 地址
 function query_dig() {
-    dig +short "$1" @$CHINA_DNS_SERVER 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
+    dig +short "$1" @$CHINA_DNS_SERVER1 @$CHINA_DNS_SERVER2 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
 }
 
 # 初始化结果统计

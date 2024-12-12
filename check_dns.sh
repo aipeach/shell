@@ -41,9 +41,23 @@ function query_cloudflare() {
         jq -r '.Answer[]?.data' 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
 }
 
-# dig 查询函数（无代理），过滤非 IP 地址
+# dig 查询函数（带重试，过滤非 IP 地址）
 function query_dig() {
-    dig +short "$1" @$CHINA_DNS_SERVER1 @$CHINA_DNS_SERVER2 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
+    local domain=$1
+    local retries=3
+    local result=""
+
+    for ((i = 1; i <= retries; i++)); do
+        result=$(dig +short "$domain" @$CHINA_DNS_SERVER1 @$CHINA_DNS_SERVER2 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort)
+        if [[ -n "$result" ]]; then
+            echo "$result"
+            return
+        fi
+        sleep 1  # 等待 1 秒后重试
+    done
+
+    # 如果所有重试都失败，返回空
+    echo ""
 }
 
 # 初始化结果统计

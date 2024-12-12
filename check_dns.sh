@@ -48,7 +48,7 @@ function query_dig() {
     local result=""
 
     for ((i = 1; i <= retries; i++)); do
-        result=$(dig +short "$domain" @$CHINA_DNS_SERVER1 @$CHINA_DNS_SERVER2 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort)
+        result=$(dig @$CHINA_DNS_SERVER1 @$CHINA_DNS_SERVER2 "$domain" A +short 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort)
         if [[ -n "$result" ]]; then
             echo "$result"
             return

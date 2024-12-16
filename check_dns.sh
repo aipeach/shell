@@ -41,6 +41,12 @@ function query_cloudflare() {
         jq -r '.Answer[]?.data' 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
 }
 
+# Google DoH API 查询函数（过滤非 IP 地址）
+function query_google() {
+    curl -s --socks5-hostname "$SOCKS5_PROXY" "https://dns.google/resolve?name=$1&type=A" |
+        jq -r '.Answer[]?.data' 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort
+}
+
 # dig 查询函数（带重试，过滤非 IP 地址）
 function query_dig() {
     local domain=$1
@@ -74,10 +80,16 @@ while IFS= read -r DOMAIN; do
     cloudflare_records=$(query_cloudflare "$DOMAIN")
     dig_records=$(query_dig "$DOMAIN")
 
+    # 如果 Cloudflare 查询为空，尝试使用 Google DoH 查询
+    if [[ -z "$cloudflare_records" ]]; then
+        echo "⚠️ Cloudflare DoH query returned no records for $DOMAIN, switching to Google DoH..."
+        cloudflare_records=$(query_google "$DOMAIN")
+    fi
+
     # 输出当前域名结果
     echo "Domain: $DOMAIN" >> "$OUTPUT_FILE"
 
-    # 判断无 DNS 记录的情况
+    # 如果两者都为空，记录为无 DNS 记录
     if [[ -z "$cloudflare_records" && -z "$dig_records" ]]; then
         echo "❌ No DNS records found for $DOMAIN!" >> "$OUTPUT_FILE"
         echo "---------------------------------" >> "$OUTPUT_FILE"
@@ -90,8 +102,10 @@ while IFS= read -r DOMAIN; do
     echo "DIG Records:" >> "$OUTPUT_FILE"
     echo "$dig_records" >> "$OUTPUT_FILE"
 
-    # 比较结果
-    if [ "$cloudflare_records" == "$dig_records" ]; then
+    # 如果一方为空，跳过比较
+    if [[ -z "$cloudflare_records" || -z "$dig_records" ]]; then
+        echo "⚠️ Skipping comparison for $DOMAIN due to missing records!" >> "$OUTPUT_FILE"
+    elif [ "$cloudflare_records" == "$dig_records" ]; then
         echo "✅ The DNS records match!" >> "$OUTPUT_FILE"
     else
         echo "❌ DNS records do not match for $DOMAIN!" >> "$OUTPUT_FILE"

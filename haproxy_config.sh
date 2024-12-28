@@ -28,9 +28,12 @@ for ((PORT=$START_PORT; PORT<=$END_PORT; PORT++)); do
 frontend frontend_$PORT
   bind 0.0.0.0:$PORT
   mode tcp
+  timeout client 30s
   default_backend backend_$PORT
 backend backend_$PORT
   mode tcp
+  timeout connect 5s
+  timeout server 30s
   server server$PORT $IP_ADDRESS:$PORT send-proxy
 
 EOF

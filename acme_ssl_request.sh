@@ -2,17 +2,13 @@
 
 # 一键申请 SSL 证书脚本，基于 acme.sh 和 Cloudflare DNS API
 # 支持通过命令行传递参数运行
-# Version: 2.2
+# Version: 2.3
 
 # ==================== 解析命令行参数 ====================
 for ARG in "$@"; do
     case $ARG in
         DOMAIN=*)
             DOMAIN="${ARG#*=}"
-            shift
-            ;;
-        EMAIL=*)
-            EMAIL="${ARG#*=}"
             shift
             ;;
         CF_API_TOKEN=*)
@@ -31,9 +27,9 @@ for ARG in "$@"; do
 done
 
 # ==================== 参数校验 ====================
-if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ] || [ -z "$CF_API_TOKEN" ] || [ -z "$RELOAD_CMD" ]; then
+if [ -z "$DOMAIN" ] || [ -z "$CF_API_TOKEN" ] || [ -z "$RELOAD_CMD" ]; then
     echo "❌ 参数缺失，请传递以下参数："
-    echo "  bash $0 DOMAIN=<域名> EMAIL=<邮箱> CF_API_TOKEN=<Cloudflare_API_Token> RELOAD_CMD=<重启命令>"
+    echo "  bash $0 DOMAIN=<域名> CF_API_TOKEN=<Cloudflare_API_Token> RELOAD_CMD=<重启命令>"
     exit 1
 fi
 
@@ -61,8 +57,11 @@ echo "开始申请 SSL 证书 (基于 Cloudflare DNS API)..."
 # 设置 Cloudflare API Token
 export CF_Token="$CF_API_TOKEN"
 
+# 修改默认 CA
+acme.sh --set-default-ca --server letsencrypt
+
 # 执行 acme.sh 命令申请证书
-acme.sh --issue --dns dns_cf -d "$DOMAIN" --keylength ec-384 --email "$EMAIL"
+acme.sh --issue --dns dns_cf -d "$DOMAIN" --keylength ec-256 --server letsencrypt
 
 # ==================== 安装证书到指定路径 ====================
 mkdir -p "$CERT_INSTALL_DIR"

@@ -62,7 +62,7 @@ echo "开始申请 SSL 证书 (基于 Cloudflare DNS API)..."
 export CF_Token="$CF_API_TOKEN"
 
 # 执行 acme.sh 命令申请证书
-acme.sh --issue --dns dns_cf -d "$DOMAIN" -d "*.$DOMAIN" --keylength ec-384 --email "$EMAIL"
+acme.sh --issue --dns dns_cf -d "$DOMAIN" --keylength ec-384 --email "$EMAIL"
 
 # ==================== 安装证书到指定路径 ====================
 mkdir -p "$CERT_INSTALL_DIR"

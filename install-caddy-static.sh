@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ========= 参数 =========
 DOMAIN=""
 PORT=""
 CF_TOKEN=""
@@ -15,11 +14,11 @@ usage() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --domain)
-      DOMAIN="$2"; shift 2 ;;
+      DOMAIN="${2:-}"; shift 2 ;;
     --port)
-      PORT="$2"; shift 2 ;;
+      PORT="${2:-}"; shift 2 ;;
     --cf-token)
-      CF_TOKEN="$2"; shift 2 ;;
+      CF_TOKEN="${2:-}"; shift 2 ;;
     *)
       usage ;;
   esac
@@ -32,50 +31,100 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-echo "========== 开始部署 =========="
+detect_debian_codename() {
+  if [[ ! -r /etc/os-release ]]; then
+    echo "无法读取 /etc/os-release"
+    exit 1
+  fi
 
-# ========= 1. 安装 Caddy =========
-echo "[1/6] 安装 Caddy..."
+  . /etc/os-release
 
-apt update
-apt install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
+  if [[ "${ID:-}" != "debian" ]]; then
+    echo "当前系统不是 Debian，检测到 ID=${ID:-unknown}"
+    exit 1
+  fi
 
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
-  | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  local ver major codename
+  ver="${VERSION_ID:-}"
+  major="${ver%%.*}"
 
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
-  | tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null
+  case "$major" in
+    11) codename="bullseye" ;;
+    12) codename="bookworm" ;;
+    13) codename="trixie" ;;
+    *)
+      echo "暂不支持的 Debian 版本: ${ver:-unknown}"
+      exit 1
+      ;;
+  esac
 
-chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-chmod o+r /etc/apt/sources.list.d/caddy-stable.list
+  echo "$codename"
+}
 
-apt update
-apt install -y caddy
+backup_and_replace_sources() {
+  local codename="$1"
+  local backup_file
 
-# ========= 2. 安装 Cloudflare 插件 =========
-echo "[2/6] 检查 Cloudflare DNS 插件..."
+  echo "[1/7] 备份并替换 Debian 官方源..."
 
-if caddy list-modules | grep -q '^dns.providers.cloudflare$'; then
-  echo "已存在插件"
-else
-  echo "安装插件..."
-  caddy add-package github.com/caddy-dns/cloudflare
-fi
+  backup_file="/etc/apt/sources.list.bak.$(date +%F-%H%M%S)"
+  if [[ -f /etc/apt/sources.list ]]; then
+    cp -a /etc/apt/sources.list "$backup_file"
+    echo "已备份旧源到: $backup_file"
+  fi
 
-# ========= 3. 写环境变量 =========
-echo "[3/6] 写入 Cloudflare Token..."
-
-mkdir -p /etc/caddy
-cat > /etc/caddy/caddy.env <<EOF
-CLOUDFLARE_API_TOKEN=${CF_TOKEN}
+  cat > /etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian ${codename} main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian ${codename}-updates main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security ${codename}-security main contrib non-free non-free-firmware
 EOF
 
-chmod 600 /etc/caddy/caddy.env
+  echo "已写入 Debian 官方源: ${codename}"
+}
 
-# ========= 4. 写 Caddyfile =========
-echo "[4/6] 生成 Caddyfile..."
+install_caddy() {
+  echo "[2/7] 更新软件包索引..."
+  apt-get update --allow-releaseinfo-change
 
-cat > /etc/caddy/Caddyfile <<EOF
+  echo "[3/7] 安装 Caddy 官方源依赖..."
+  apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
+
+  echo "[4/7] 安装 Caddy..."
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+    | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+    | tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null
+
+  chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  chmod o+r /etc/apt/sources.list.d/caddy-stable.list
+
+  apt-get update --allow-releaseinfo-change
+  apt-get install -y caddy
+}
+
+ensure_plugin() {
+  echo "[5/7] 检查 Cloudflare DNS 插件..."
+
+  if caddy list-modules | grep -q '^dns.providers.cloudflare$'; then
+    echo "已存在 dns.providers.cloudflare"
+  else
+    echo "安装 dns.providers.cloudflare ..."
+    caddy add-package github.com/caddy-dns/cloudflare
+  fi
+}
+
+write_config() {
+  echo "[6/7] 生成配置..."
+
+  mkdir -p /etc/caddy
+
+  cat > /etc/caddy/caddy.env <<EOF
+CLOUDFLARE_API_TOKEN=${CF_TOKEN}
+EOF
+  chmod 600 /etc/caddy/caddy.env
+
+  cat > /etc/caddy/Caddyfile <<EOF
 {
     acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 }
@@ -93,45 +142,51 @@ ${DOMAIN}:${PORT} {
 }
 EOF
 
-# ========= 5. systemd =========
-echo "[5/6] 配置 systemd..."
-
-mkdir -p /etc/systemd/system/caddy.service.d
-
-cat > /etc/systemd/system/caddy.service.d/override.conf <<EOF
+  mkdir -p /etc/systemd/system/caddy.service.d
+  cat > /etc/systemd/system/caddy.service.d/override.conf <<EOF
 [Service]
 EnvironmentFile=/etc/caddy/caddy.env
-ExecReload=
-ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 EOF
+}
 
-systemctl daemon-reload
+start_service() {
+  echo "[7/7] 校验并启动服务..."
 
-# ========= 6. 启动 =========
-echo "[6/6] 启动服务..."
+  export CLOUDFLARE_API_TOKEN="$CF_TOKEN"
+  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
-export CLOUDFLARE_API_TOKEN="$CF_TOKEN"
-caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+  systemctl daemon-reload
+  systemctl enable --now caddy
+  systemctl restart caddy
 
-systemctl enable --now caddy
-systemctl restart caddy
+  echo
+  echo "✅ 部署完成"
+  echo "----------------------------------"
+  echo "域名:    https://${DOMAIN}:${PORT}"
+  echo "目录:    /usr/share/caddy"
+  echo "源文件:  /etc/apt/sources.list"
+  echo
+  echo "测试页面："
+  echo "  echo 'hello world' > /usr/share/caddy/index.html"
+  echo
+  echo "查看状态："
+  echo "  systemctl status caddy"
+  echo
+  echo "查看日志："
+  echo "  journalctl -u caddy -f"
+  echo
+  echo "重载配置："
+  echo "  systemctl reload caddy"
+  echo "----------------------------------"
+}
 
-# ========= 完成 =========
-echo
-echo "✅ 部署完成"
-echo "----------------------------------"
-echo "域名:    https://${DOMAIN}:${PORT}"
-echo "目录:    /usr/share/caddy"
-echo
-echo "测试页面："
-echo "  echo 'hello world' > /usr/share/caddy/index.html"
-echo
-echo "查看状态："
-echo "  systemctl status caddy"
-echo
-echo "查看日志："
-echo "  journalctl -u caddy -f"
-echo
-echo "重载配置："
-echo "  systemctl reload caddy"
-echo "----------------------------------"
+echo "========== 开始部署 =========="
+
+CODENAME="$(detect_debian_codename)"
+echo "检测到 Debian 代号: ${CODENAME}"
+
+backup_and_replace_sources "$CODENAME"
+install_caddy
+ensure_plugin
+write_config
+start_service

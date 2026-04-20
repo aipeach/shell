@@ -127,6 +127,7 @@ EOF
   cat > /etc/caddy/Caddyfile <<EOF
 {
     acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    auto_https disable_redirects
 }
 
 ${DOMAIN}:${PORT} {
